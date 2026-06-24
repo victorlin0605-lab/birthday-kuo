@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>S.H.I.E.L.D. — 存取驗證</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+    :root {
+      --shield-blue: #0a1628;
+      --shield-mid: #0d2040;
+      --accent: #1e6fb5;
+      --bright: #4db8ff;
+      --red: #cc2200;
+      --green: #00cc66;
+      --text: #c8d8e8;
+      --dim: #5a7a9a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--shield-blue);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%);
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 680px;
+      background: var(--shield-mid);
+      border: 1px solid var(--accent);
+      box-shadow:
+        0 0 0 1px rgba(30,111,181,0.3),
+        0 0 40px rgba(30,111,181,0.15),
+        inset 0 0 60px rgba(0,0,0,0.4);
+      position: relative;
+      padding: 48px 52px 56px;
+      transition: border-color 0.4s, box-shadow 0.4s;
+    }
+
+    .card.success {
+      border-color: var(--green);
+      box-shadow:
+        0 0 0 1px rgba(0,204,102,0.4),
+        0 0 60px rgba(0,204,102,0.25),
+        inset 0 0 60px rgba(0,0,0,0.4);
+    }
+
+    .card.error {
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-8px); }
+      40%      { transform: translateX(8px); }
+      60%      { transform: translateX(-6px); }
+      80%      { transform: translateX(6px); }
+    }
+
+    .card::before, .card::after,
+    .corner-br, .corner-bl {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-style: solid;
+      border-color: var(--bright);
+      transition: border-color 0.4s;
+    }
+    .card.success::before,
+    .card.success::after,
+    .card.success .corner-br,
+    .card.success .corner-bl { border-color: var(--green); }
+
+    .card::before { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
+    .card::after  { top: 10px; right: 10px; border-width: 2px 2px 0 0; }
+    .corner-br { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
+    .corner-bl { bottom: 10px; left: 10px; border-width: 0 0 2px 2px; }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      border-bottom: 1px solid rgba(30,111,181,0.5);
+      padding-bottom: 24px;
+      margin-bottom: 40px;
+    }
+
+    .shield-emblem { flex-shrink: 0; width: 72px; height: 72px; }
+
+    .header-text { flex: 1; }
+
+    .org-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: var(--dim);
+      text-transform: uppercase;
+    }
+
+    .title-main {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--bright);
+      letter-spacing: 2px;
+      line-height: 1.1;
+      margin: 4px 0 2px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 3px;
+    }
+
+    /* ── MAIN ── */
+    .verify-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--bright);
+      letter-spacing: 3px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .verify-sub {
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 3px;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .input-label {
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: var(--dim);
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    /* ── CODE INPUTS ── */
+    .code-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .code-cell {
+      width: 56px;
+      height: 68px;
+      background: rgba(10,22,40,0.8);
+      border: 2px solid rgba(30,111,181,0.5);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: #ffffff;
+      text-align: center;
+      text-transform: uppercase;
+      caret-color: var(--bright);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      -webkit-appearance: none;
+      border-radius: 0;
+    }
+
+    .code-cell:focus {
+      border-color: var(--bright);
+      box-shadow: 0 0 12px rgba(77,184,255,0.35);
+      background: rgba(30,111,181,0.12);
+    }
+
+    .code-cell.filled {
+      border-color: var(--accent);
+      color: var(--bright);
+    }
+
+    .code-cell.correct {
+      border-color: var(--green);
+      color: var(--green);
+      box-shadow: 0 0 12px rgba(0,204,102,0.35);
+      animation: pop 0.3s ease;
+    }
+
+    .code-cell.wrong {
+      border-color: var(--red);
+      color: var(--red);
+      box-shadow: 0 0 12px rgba(204,34,0,0.35);
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── SUBMIT BUTTON ── */
+    .btn-verify {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: transparent;
+      border: 2px solid var(--accent);
+      color: var(--bright);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+      margin-bottom: 20px;
+    }
+
+    .btn-verify:hover:not(:disabled) {
+      background: rgba(30,111,181,0.15);
+      border-color: var(--bright);
+      box-shadow: 0 0 16px rgba(77,184,255,0.2);
+    }
+
+    .btn-verify:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* ── STATUS MESSAGE ── */
+    .status {
+      height: 20px;
+      text-align: center;
+      font-size: 12px;
+      letter-spacing: 3px;
+      color: transparent;
+      transition: color 0.3s;
+    }
+
+    .status.error-msg  { color: var(--red); }
+    .status.success-msg { color: var(--green); }
+
+    /* ── SUCCESS REVEAL ── */
+    .reveal-panel {
+      display: none;
+      margin-top: 32px;
+      border: 1px solid var(--green);
+      background: rgba(0,204,102,0.05);
+      padding: 28px 28px 24px;
+      position: relative;
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal-panel::before {
+      content: '▶  ACCESS GRANTED';
+      position: absolute;
+      top: -10px;
+      left: 20px;
+      background: var(--shield-mid);
+      padding: 0 8px;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--green);
+    }
+
+    .reveal-panel.visible { display: block; }
+
+    .reveal-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+    }
+
+    .reveal-body {
+      font-size: 14px;
+      line-height: 2;
+      color: var(--text);
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-bar {
+      height: 2px;
+      background: rgba(30,111,181,0.2);
+      margin-bottom: 36px;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; height: 100%;
+      width: 35%;
+      background: var(--bright);
+      box-shadow: 0 0 8px var(--bright);
+      animation: scan 3s linear infinite;
+    }
+    @keyframes scan {
+      0%   { left: -40%; }
+      100% { left: 120%; }
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      margin-top: 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-top: 1px solid rgba(30,111,181,0.3);
+      padding-top: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .clearance { font-size: 10px; color: var(--dim); letter-spacing: 2px; }
+    .clearance span { color: var(--red); }
+    .sig { font-size: 11px; text-align: right; color: var(--dim); }
+
+    @media (max-width: 520px) {
+      .card { padding: 36px 20px 44px; }
+      .title-main { font-size: 22px; }
+      .code-cell { width: 44px; height: 58px; font-size: 28px; }
+      .code-row { gap: 8px; }
+      .header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="corner-br"></div>
+  <div class="corner-bl"></div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <svg class="shield-emblem" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 4 L92 20 L92 55 C92 78 72 98 50 106 C28 98 8 78 8 55 L8 20 Z"
+            fill="none" stroke="#1e6fb5" stroke-width="2.5"/>
+      <path d="M50 10 L86 24 L86 55 C86 75 68 93 50 101 C32 93 14 75 14 55 L14 24 Z"
+            fill="rgba(10,22,40,0.8)" stroke="#4db8ff" stroke-width="1.5"/>
+      <text x="50" y="68" text-anchor="middle" font-size="36" fill="#4db8ff" font-family="serif">✦</text>
+      <text x="50" y="38" text-anchor="middle" font-size="11" fill="#1e6fb5" font-family="monospace" letter-spacing="2">S.H.I.E.L.D</text>
+    </svg>
+
+    <div class="header-text">
+      <div class="org-name">Strategic Homeland Intervention, Enforcement &amp; Logistics Division</div>
+      <div class="title-main">S.H.I.E.L.D.</div>
+      <div class="subtitle">存取驗證系統 &nbsp;·&nbsp; ACCESS VERIFICATION</div>
+    </div>
+  </div>
+
+  <div class="progress-bar"></div>
+
+  <div class="verify-title">存取驗證</div>
+  <div class="verify-sub">S.H.I.E.L.D. ACCESS VERIFICATION SYSTEM</div>
+
+  <div class="input-label">請輸入機密代號</div>
+
+  <div class="code-row" id="codeRow">
+    <input class="code-cell" maxlength="1" inputmode="text" autocomplete="off" spellcheck="false" />
+    <input class="code-cell" maxlength="1" inputmode="text" autocomplete="off" spellcheck="false" />
+    <input class="code-cell" maxlength="1" inputmode="text" autocomplete="off" spellcheck="false" />
+    <input class="code-cell" maxlength="1" inputmode="text" autocomplete="off" spellcheck="false" />
+    <input class="code-cell" maxlength="1" inputmode="text" autocomplete="off" spellcheck="false" />
+    <input class="code-cell" maxlength="1" inputmode="text" autocomplete="off" spellcheck="false" />
+  </div>
+
+  <button class="btn-verify" id="btnVerify" disabled>▶ &nbsp; 驗證代號 &nbsp; VERIFY</button>
+
+  <div class="status" id="status"></div>
+
+  <!-- SUCCESS REVEAL -->
+  <div class="reveal-panel" id="revealPanel">
+    <div class="reveal-title">身分驗證成功</div>
+    <div class="reveal-body" id="revealBody"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="clearance">
+      安全等級：<span>EYES ONLY</span><br/>
+      未授權存取將觸發緊急協議 77
+    </div>
+    <div class="sig">
+      神盾局局長辦公室<br/>
+      <span style="color:var(--accent)">DIRECTOR'S OFFICE</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ─── 在這裡設定正確答案（大小寫不拘）───
+  const CORRECT_CODE = 'AURORA';
+
+  // ─── 驗證成功後顯示的訊息 ───
+  const SUCCESS_MESSAGE = `任務完成，特工 Ellison Kuo。<br/><br/>
+PROJECT HAPPYWIFE 已成功奪回。<br/>
+請和 Agent Victor 一起將目標打開，並輸入至 index<br/>
+神盾局感謝妳的貢獻。`;
+
+  // ────────────────────────────────────────
+
+  const cells = Array.from(document.querySelectorAll('.code-cell'));
+  const btn   = document.getElementById('btnVerify');
+  const status = document.getElementById('status');
+  const card   = document.getElementById('card');
+  const revealPanel = document.getElementById('revealPanel');
+  const revealBody  = document.getElementById('revealBody');
+
+  function getCode() {
+    return cells.map(c => c.value).join('');
+  }
+
+  function updateBtn() {
+    btn.disabled = getCode().length < cells.length;
+  }
+
+  cells.forEach((cell, i) => {
+    cell.addEventListener('keydown', e => {
+      if (e.key === 'Backspace') {
+        if (cell.value === '' && i > 0) {
+          cells[i - 1].value = '';
+          cells[i - 1].classList.remove('filled', 'correct', 'wrong');
+          cells[i - 1].focus();
+        } else {
+          cell.value = '';
+          cell.classList.remove('filled', 'correct', 'wrong');
+        }
+        updateBtn();
+        e.preventDefault();
+      }
+    });
+
+    cell.addEventListener('input', e => {
+      const val = cell.value.slice(-1).toUpperCase();
+      cell.value = val;
+      if (val) {
+        cell.classList.add('filled');
+        cell.classList.remove('correct', 'wrong');
+        if (i < cells.length - 1) cells[i + 1].focus();
+      } else {
+        cell.classList.remove('filled');
+      }
+      updateBtn();
+      clearStatus();
+    });
+
+    cell.addEventListener('paste', e => {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\s/g, '').toUpperCase();
+      text.split('').forEach((ch, j) => {
+        if (i + j < cells.length) {
+          cells[i + j].value = ch;
+          cells[i + j].classList.add('filled');
+        }
+      });
+      const next = Math.min(i + text.length, cells.length - 1);
+      cells[next].focus();
+      updateBtn();
+    });
+  });
+
+  function clearStatus() {
+    status.textContent = '';
+    status.className = 'status';
+  }
+
+  btn.addEventListener('click', verify);
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !btn.disabled) verify();
+  });
+
+  function verify() {
+    const code = getCode().toUpperCase();
+    if (code === CORRECT_CODE.toUpperCase()) {
+      // SUCCESS
+      cells.forEach(c => { c.classList.remove('filled', 'wrong'); c.classList.add('correct'); });
+      card.classList.add('success');
+      status.textContent = '── 代號驗證成功 ──';
+      status.className = 'status success-msg';
+      btn.disabled = true;
+      revealBody.innerHTML = SUCCESS_MESSAGE;
+      revealPanel.classList.add('visible');
+    } else {
+      // ERROR
+      cells.forEach(c => { c.classList.remove('filled', 'correct'); c.classList.add('wrong'); });
+      card.classList.remove('error');
+      void card.offsetWidth; // reflow to restart animation
+      card.classList.add('error');
+      status.textContent = '── 代號錯誤，存取被拒 ──';
+      status.className = 'status error-msg';
+      setTimeout(() => {
+        cells.forEach(c => c.classList.remove('wrong'));
+        clearStatus();
+      }, 1800);
+    }
+  }
+
+  // Focus first cell on load
+  cells[0].focus();
+</script>
+</body>
+</html>

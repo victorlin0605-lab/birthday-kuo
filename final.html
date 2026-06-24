@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>S.H.I.E.L.D. — AURORA</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+    :root {
+      --shield-blue: #0a1628;
+      --shield-mid: #0d2040;
+      --accent: #1e6fb5;
+      --bright: #4db8ff;
+      --red: #cc2200;
+      --text: #c8d8e8;
+      --dim: #5a7a9a;
+      --warm: #ffb347;
+      --rose: #ff6b8a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--shield-blue);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%);
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 680px;
+      background: var(--shield-mid);
+      border: 1px solid var(--accent);
+      box-shadow:
+        0 0 0 1px rgba(30,111,181,0.3),
+        0 0 40px rgba(30,111,181,0.15),
+        inset 0 0 60px rgba(0,0,0,0.4);
+      position: relative;
+      padding: 48px 52px 56px;
+      transition: border-color 1.2s, box-shadow 1.2s;
+    }
+
+    .card.warm {
+      border-color: rgba(255,107,138,0.6);
+      box-shadow:
+        0 0 0 1px rgba(255,107,138,0.25),
+        0 0 60px rgba(255,107,138,0.12),
+        inset 0 0 60px rgba(0,0,0,0.4);
+    }
+
+    .card::before, .card::after,
+    .corner-br, .corner-bl {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-style: solid;
+      border-color: var(--bright);
+      transition: border-color 1.2s;
+    }
+    .card.warm::before,
+    .card.warm::after,
+    .card.warm .corner-br,
+    .card.warm .corner-bl { border-color: var(--rose); }
+
+    .card::before { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
+    .card::after  { top: 10px; right: 10px; border-width: 2px 2px 0 0; }
+    .corner-br { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
+    .corner-bl { bottom: 10px; left: 10px; border-width: 0 0 2px 2px; }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      border-bottom: 1px solid rgba(30,111,181,0.5);
+      padding-bottom: 24px;
+      margin-bottom: 40px;
+    }
+
+    .shield-emblem { flex-shrink: 0; width: 64px; height: 64px; }
+
+    .org-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: var(--dim);
+      text-transform: uppercase;
+    }
+
+    .title-main {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--bright);
+      letter-spacing: 2px;
+      margin: 4px 0 2px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 3px;
+    }
+
+    /* ── REVEAL LINES ── */
+    .line {
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+      line-height: 2.2;
+      font-size: 15px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .line.visible { opacity: 1; transform: translateY(0); }
+
+    .line.spacer { margin-bottom: 18px; }
+
+    /* AURORA reveal */
+    .aurora-line {
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.9s ease, transform 0.9s ease;
+      margin: 28px 0 6px;
+    }
+
+    .aurora-line.visible { opacity: 1; transform: translateY(0); }
+
+    .aurora-word {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 52px;
+      font-weight: 700;
+      letter-spacing: 8px;
+      color: #ffffff;
+      text-shadow: 0 0 30px rgba(255,107,138,0.6), 0 0 60px rgba(255,107,138,0.3);
+      display: block;
+      text-align: center;
+    }
+
+    .aurora-sub {
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: var(--rose);
+      text-align: center;
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* BIRTHDAY line */
+    .birthday-line {
+      opacity: 0;
+      transform: scale(0.95);
+      transition: opacity 1s ease, transform 1s ease;
+      text-align: center;
+      margin: 36px 0 24px;
+      padding: 28px 20px;
+      border: 1px solid rgba(255,107,138,0.4);
+      background: rgba(255,107,138,0.05);
+      position: relative;
+    }
+
+    .birthday-line.visible { opacity: 1; transform: scale(1); }
+
+    .birthday-line::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px solid rgba(255,107,138,0.2);
+      pointer-events: none;
+    }
+
+    .birthday-text {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: var(--rose);
+      text-shadow: 0 0 20px rgba(255,107,138,0.5);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .birthday-heart {
+      font-size: 28px;
+      animation: heartbeat 1.4s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    @keyframes heartbeat {
+      0%,100% { transform: scale(1); }
+      14%     { transform: scale(1.2); }
+      28%     { transform: scale(1); }
+      42%     { transform: scale(1.15); }
+      56%     { transform: scale(1); }
+    }
+
+    /* AGENT ID badge */
+    .agent-badge {
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      margin-top: 28px;
+      border: 1px solid rgba(30,111,181,0.4);
+      background: rgba(10,22,40,0.6);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+    }
+
+    .agent-badge::before {
+      content: '▶  AGENT ID';
+      position: absolute;
+      top: -10px;
+      left: 16px;
+      background: var(--shield-mid);
+      padding: 0 8px;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--dim);
+    }
+
+    .agent-badge.visible { opacity: 1; }
+
+    .badge-icon {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+    }
+
+    .badge-info { flex: 1; }
+
+    .badge-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 2px;
+    }
+
+    .badge-code {
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 3px;
+      margin-top: 2px;
+    }
+
+    .badge-status {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--rose);
+      border: 1px solid var(--rose);
+      padding: 3px 8px;
+    }
+
+    /* progress bar */
+    .progress-bar {
+      height: 2px;
+      background: rgba(30,111,181,0.2);
+      margin-bottom: 36px;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; height: 100%;
+      width: 35%;
+      background: var(--bright);
+      box-shadow: 0 0 8px var(--bright);
+      animation: scan 3s linear infinite;
+    }
+    @keyframes scan {
+      0%   { left: -40%; }
+      100% { left: 120%; }
+    }
+
+    @media (max-width: 520px) {
+      .card { padding: 36px 24px 44px; }
+      .title-main { font-size: 22px; }
+      .aurora-word { font-size: 38px; letter-spacing: 5px; }
+      .birthday-text { font-size: 26px; }
+      .header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="corner-br"></div>
+  <div class="corner-bl"></div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <svg class="shield-emblem" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 4 L92 20 L92 55 C92 78 72 98 50 106 C28 98 8 78 8 55 L8 20 Z"
+            fill="none" stroke="#1e6fb5" stroke-width="2.5"/>
+      <path d="M50 10 L86 24 L86 55 C86 75 68 93 50 101 C32 93 14 75 14 55 L14 24 Z"
+            fill="rgba(10,22,40,0.8)" stroke="#4db8ff" stroke-width="1.5"/>
+      <text x="50" y="68" text-anchor="middle" font-size="36" fill="#4db8ff" font-family="serif">✦</text>
+      <text x="50" y="38" text-anchor="middle" font-size="11" fill="#1e6fb5" font-family="monospace" letter-spacing="2">S.H.I.E.L.D</text>
+    </svg>
+    <div>
+      <div class="org-name">Strategic Homeland Intervention, Enforcement &amp; Logistics Division</div>
+      <div class="title-main">S.H.I.E.L.D.</div>
+      <div class="subtitle">最終檔案 &nbsp;·&nbsp; FINAL FILE — AURORA</div>
+    </div>
+  </div>
+
+  <div class="progress-bar"></div>
+
+  <!-- REVEAL LINES -->
+  <div class="line" data-delay="200">神盾局花了很久尋找這份檔案。</div>
+  <div class="line spacer" data-delay="1000">我們原本以為，</div>
+  <div class="line" data-delay="1800">裡面藏的是世界上最重要的情報。</div>
+  <div class="line spacer" data-delay="2800">直到今天才發現。</div>
+
+  <div class="aurora-line" data-delay="3800" id="auroraBlock">
+    <span class="aurora-word">AURORA</span>
+    <span class="aurora-sub">並不是一份檔案</span>
+  </div>
+
+  <div class="line" data-delay="5000" style="margin-top:24px;">而是一個人。</div>
+  <div class="line" data-delay="5800">那個陪我一起生活、</div>
+  <div class="line" data-delay="6600">一起旅行、</div>
+  <div class="line spacer" data-delay="7400">一起面對未來的人。</div>
+
+  <!-- BIRTHDAY -->
+  <div class="birthday-line" id="birthdayLine" data-delay="8400">
+    <span class="birthday-heart">🥳</span>
+    <span class="birthday-text">生日快樂</span>
+    <span class="birthday-heart">🥳</span>
+  </div>
+
+  <!-- AGENT BADGE -->
+  <div class="agent-badge" id="agentBadge" data-delay="9600">
+    <svg class="badge-icon" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 4 L92 20 L92 55 C92 78 72 98 50 106 C28 98 8 78 8 55 L8 20 Z"
+            fill="none" stroke="#ff6b8a" stroke-width="2"/>
+      <path d="M50 10 L86 24 L86 55 C86 75 68 93 50 101 C32 93 14 75 14 55 L14 24 Z"
+            fill="rgba(10,22,40,0.8)" stroke="rgba(255,107,138,0.6)" stroke-width="1.2"/>
+      <text x="50" y="70" text-anchor="middle" font-size="34" fill="#ff6b8a" font-family="serif">✦</text>
+    </svg>
+    <div class="badge-info">
+      <div class="badge-name">Agent Ellison Kuo</div>
+      <div class="badge-code">特工編號 &nbsp;·&nbsp; AGENT ID CONFIRMED</div>
+    </div>
+    <div class="badge-status">VERIFIED</div>
+  </div>
+</div>
+
+<script>
+  const lines    = document.querySelectorAll('.line[data-delay]');
+  const aurora   = document.getElementById('auroraBlock');
+  const birthday = document.getElementById('birthdayLine');
+  const badge    = document.getElementById('agentBadge');
+  const card     = document.getElementById('card');
+
+  const allEls = [
+    ...lines,
+    aurora,
+    birthday,
+    badge
+  ];
+
+  allEls.forEach(el => {
+    const delay = parseInt(el.getAttribute('data-delay'), 10);
+    setTimeout(() => {
+      el.classList.add('visible');
+      // Switch card to warm palette when birthday line appears
+      if (el === birthday) {
+        card.classList.add('warm');
+      }
+    }, delay);
+  });
+</script>
+</body>
+</html>
